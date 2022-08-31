@@ -1,0 +1,14 @@
+# original
+*.pt
+*.pth
+*.ckpt
+*tfevents*
+**/__pycache__/**
+**/.ipynb_checkpoints/**
+exp/
+tmp/
+azcopy*
+*egg-info*
+## Deep speed
+*.pyc
+*cache*
