@@ -118,7 +118,7 @@ bash tools/download.sh
 | Text-to-image          | COCO 2014                  | 11.24  | 
 | Text-to-image (mini)   | COCO 2014                  | 64.85  | 1000 images of mini-val; FID was calculated against corresponding GT images.
 | Layout-to-image        | COCO (finetuned OpenImage) | 37.14  | FID calculated on 2,048 val images.
-| Layout-to-image (mini) | COCO (finetuned OpenImage) | 122.48 | 500 images of mini-val; FID was calculated against corresponding GT images.
+| Layout-to-image (mini) | COCO (finetuned OpenImage) | 121.23 | 320 images of mini-val; FID was calculated against corresponding GT images.
 
 > *The mini-versions are for quick testing and reproducing, which can be done within 1 hours on 1*V100. High FID is expected. To evaluate generation quality, full validation / test split needs to be run.*
 

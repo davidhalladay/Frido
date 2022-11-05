@@ -100,15 +100,15 @@ data:
       params:
         data_path: ../datasets/coco/2017  # substitute with path to full dataset
         OI_cate_path: frido/data/classes.csv
-        img_id_file: frido/data/image_ids_layout2i.txt
+        img_id_file: frido/data/image_ids_layout2i.txt  # This is used for fixing sample files.
         num_sample: 500
         split: validation
         keys: [image, objects_bbox, file_name, annotations]
         no_tokens: 1024
         target_image_size: 256
         min_object_area: 0.02
-        min_objects_per_image: 2
-        max_objects_per_image: 30
+        min_objects_per_image: 3
+        max_objects_per_image: 8
         crop_method: center
         random_flip: false
         use_group_parameter: true
@@ -125,8 +125,8 @@ data:
         no_tokens: 1024
         target_image_size: 256
         min_object_area: 0.02
-        min_objects_per_image: 2
-        max_objects_per_image: 30
+        min_objects_per_image: 3
+        max_objects_per_image: 8
         crop_method: center
         random_flip: false
         use_group_parameter: true
