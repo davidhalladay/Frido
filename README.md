@@ -1,7 +1,7 @@
 # *Frido*: Feature Pyramid Diffusion for Complex Scene Image Synthesis
 
 ---
-This is the official repository of [Frido](https://arxiv.org/abs/2208.13753). Currently, text-to-image and layout-to-image for COCO are supported (inference-only). We will release more pre-trained models for other image synthesis tasks. Training code will be available in future version. Please stay tuned!
+This is the official repository of [Frido](https://arxiv.org/abs/2208.13753) (AAAI 2023). Currently, text-to-image and layout-to-image for COCO are supported (inference-only). We will release more pre-trained models for other image synthesis tasks. Training code will be available in future version. Please stay tuned!
 
 ![Frido](./figures/model.png)
 ![demo](./figures/demo.png)
@@ -191,11 +191,11 @@ We build Frido codebase heavily on the codebase of [Latent Diffusion Model (LDM)
 ## Citation
 If you find this code useful for your research, please consider citing:
 ```bibtex
-@article{fan2022frido,
+@inproceedings{fan2022frido,
   title={Frido: Feature Pyramid Diffusion for Complex Scene Image Synthesis},
   author={Fan, Wan-Cyuan and Chen, Yen-Chun and Chen, Dongdong and Cheng, Yu and Yuan, Lu and Wang, Yu-Chiang Frank},
-  journal={arXiv preprint arXiv:2208.13753},
-  year={2022}
+  booktitle={AAAI},
+  year={2023}
 }
 ```
 
