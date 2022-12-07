@@ -1,0 +1,96 @@
+model:
+  base_learning_rate: 4.5e-6
+  target: taming.models.msvqgan.MSFPNVQModel
+  params:
+    monitor: 'val/rec_loss'
+    embed_dim: [3, 3]
+    n_embed: [4096, 4096]
+    edconfig:
+      multiscale: 2
+      double_z: False
+      z_channels: [3, 3]
+      resolution: 256
+      in_channels: 3
+      out_ch: 3
+      ch: 128
+      ch_mult: [ 1,1,2,4 ]  # num_down = len(ch_mult)-1
+      num_res_blocks: 2
+      attn_resolutions: [64]
+      dropout: 0.0
+    ddconfig:
+      double_z: False
+      z_channels: 6
+      resolution: 256
+      in_channels: 3
+      out_ch: 3
+      ch: 128
+      ch_mult: [ 1,2,4 ]  # num_down = len(ch_mult)-1
+      num_res_blocks: 2
+      attn_resolutions: [64]
+      dropout: 0.0
+    lossconfig: # same setting as LDM vq f4
+      target: taming.modules.losses.vqperceptual.VQLPIPSWithDiscriminator
+      params:
+        disc_conditional: False
+        disc_in_channels: 3
+        disc_start: 0
+        disc_weight: 0.75
+        codebook_weight: 1.0
+
+data:
+  target: main.DataModuleFromConfig
+  params:
+    batch_size: 4
+    num_workers: 4
+    train:
+      target: taming.data.annotated_objects_open_images.AnnotatedObjectsOpenImages
+      params:
+        use_additional_parameters: false
+        data_path: ../datasets/openimage/train  # substitute with path to full dataset
+        split: train
+        keys: [image, file_name]
+        no_tokens: 1024
+        target_image_size: 256
+        min_object_area: 0.00001
+        min_objects_per_image: 2
+        max_objects_per_image: 30
+        crop_method: random-1d
+        random_flip: true
+        use_group_parameter: true
+        encode_crop: true
+    validation:
+      target: taming.data.annotated_objects_open_images.AnnotatedObjectsOpenImages
+      params:
+        use_additional_parameters: false
+        data_path: ../datasets/openimage/validation  # substitute with path to full dataset
+        split: validation
+        keys: [image, file_name]
+        no_tokens: 1024
+        target_image_size: 256
+        min_object_area: 0.00001
+        min_objects_per_image: 2
+        max_objects_per_image: 30
+        crop_method: center
+        random_flip: false
+        use_group_parameter: true
+        encode_crop: true
+    test:
+      target: taming.data.annotated_objects_open_images.AnnotatedObjectsOpenImages
+      params:
+        use_additional_parameters: false
+        data_path: ../datasets/openimage/validation  # substitute with path to full dataset
+        split: validation
+        keys: [image, file_name]
+        no_tokens: 1024
+        target_image_size: 256
+        min_object_area: 0.00001
+        min_objects_per_image: 2
+        max_objects_per_image: 30
+        crop_method: center
+        random_flip: false
+        use_group_parameter: true
+        encode_crop: true
+
+lightning:
+  trainer:
+    max_epochs: 50

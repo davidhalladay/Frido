@@ -1,0 +1,94 @@
+model:
+  base_learning_rate: 4.5e-6
+  target: taming.models.msvqgan.MSFPNVQModel
+  params:
+    monitor: 'val/rec_loss'
+    embed_dim: [4, 4]
+    n_embed: [8192, 8192]
+    edconfig:
+      multiscale: 2
+      double_z: False
+      z_channels: [4, 4]
+      resolution: 256
+      in_channels: 3
+      out_ch: 3
+      ch: 128
+      ch_mult: [ 1,1,2,2,4 ]  # num_down = len(ch_mult)-1
+      num_res_blocks: 2
+      attn_resolutions: [32]
+      dropout: 0.0
+    ddconfig:
+      double_z: False
+      z_channels: 8
+      resolution: 256
+      in_channels: 3
+      out_ch: 3
+      ch: 128
+      ch_mult: [ 1,1,2,4 ]  # num_down = len(ch_mult)-1
+      num_res_blocks: 2
+      attn_resolutions: [32]
+      dropout: 0.0
+    lossconfig:
+      target: taming.modules.losses.vqperceptual.VQLPIPSWithDiscriminator
+      params:
+        disc_conditional: False
+        disc_in_channels: 3
+        disc_num_layers: 2
+        disc_start: 30001
+        disc_weight: 0.8
+        codebook_weight: 1.0
+
+data:
+  target: main.DataModuleFromConfig
+  params:
+    batch_size: 4
+    num_workers: 4
+    train:
+      target: taming.data.annotated_objects_coco.AnnotatedObjectsCoco
+      params:
+        data_path: ../datasets/coco/2017  # substitute with path to full dataset
+        split: train
+        keys: [image, objects_bbox, file_name, annotations]
+        no_tokens: 1024
+        target_image_size: 256
+        min_object_area: 0.00001
+        min_objects_per_image: 2
+        max_objects_per_image: 30
+        crop_method: random-1d
+        random_flip: true
+        use_group_parameter: true
+        encode_crop: true
+    validation:
+      target: taming.data.annotated_objects_coco.AnnotatedObjectsCoco
+      params:
+        data_path: ../datasets/coco/2017  # substitute with path to full dataset
+        split: validation
+        keys: [image, objects_bbox, file_name, annotations]
+        no_tokens: 1024
+        target_image_size: 256
+        min_object_area: 0.00001
+        min_objects_per_image: 2
+        max_objects_per_image: 30
+        crop_method: center
+        random_flip: false
+        use_group_parameter: true
+        encode_crop: true
+    test:
+      target: taming.data.annotated_objects_coco.AnnotatedObjectsCoco
+      params:
+        data_path: ../datasets/coco/2017  # substitute with path to full dataset
+        split: validation
+        keys: [image, objects_bbox, file_name, annotations]
+        no_tokens: 1024
+        target_image_size: 256
+        min_object_area: 0.0000001
+        min_objects_per_image: 0
+        max_objects_per_image: 90
+        crop_method: center
+        random_flip: false
+        use_group_parameter: true
+        encode_crop: true
+
+lightning:
+  trainer:
+    max_epochs: 100

@@ -1,0 +1,149 @@
+model:
+  base_learning_rate: 1.e-6   # set to target_lr by starting main.py with '--scale_lr False'
+  target: ldm.models.diffusion.msldm.MSLatentDiffusion
+  params:
+    adopted_scale_factor: True
+    noise_mix_ratio: 0.1
+    first_stage_key: image
+    cond_stage_key: caption
+    linear_start: 0.0015
+    linear_end: 0.0155
+    num_timesteps_cond: 1
+    log_every_t: 200
+    timesteps: 1000
+    loss_type: l1
+    image_size: 32
+    channels: 8
+    cond_stage_trainable: false
+    conditioning_key: crossattn
+    scale_by_std: True
+    monitor: 'val/loss_ema'
+    unet_config:
+      target: ldm.modules.diffusionmodules.openaimodel.UNetModel
+      params:
+        use_split_head: true
+        split_embed_dim_list: [4, 4]
+        use_SPADE_norm: true
+        image_size: 32
+        in_channels: 8
+        out_channels: 8
+        model_channels: 192
+        attention_resolutions:
+        - 8
+        - 4
+        - 2
+        num_res_blocks: 2
+        channel_mult:
+        - 1
+        - 2
+        - 3
+        - 5
+        num_head_channels: 32
+        use_spatial_transformer: true
+        transformer_depth: 1
+        context_dim: 768
+        num_stage: 2
+
+    first_stage_config:
+      target: taming.models.msvqgan.VQModelInterface
+      params:
+        ckpt_path: exp/msvqgan/openimage_f16f8/model.ckpt
+        embed_dim: [4, 4]
+        n_embed: [8192, 8192]
+        edconfig:
+          multiscale: 2
+          double_z: False
+          z_channels: [4, 4]
+          resolution: 256
+          in_channels: 3
+          out_ch: 3
+          ch: 128
+          ch_mult: [ 1,1,2,2,4 ]  # num_down = len(ch_mult)-1
+          num_res_blocks: 2
+          attn_resolutions: [32]
+          dropout: 0.0
+        ddconfig:
+          double_z: False
+          z_channels: 8
+          resolution: 256
+          in_channels: 3
+          out_ch: 3
+          ch: 128
+          ch_mult: [ 1,1,2,4 ]  # num_down = len(ch_mult)-1
+          num_res_blocks: 2
+          attn_resolutions: [32]
+          dropout: 0.0
+        lossconfig:
+          target: taming.modules.losses.DummyLoss
+
+    cond_stage_config:
+      target: frido.modules.encoders.modules.FrozenCLIPTextEmbedder
+
+    plot_sample: False 
+    plot_inpaint: False 
+    plot_denoise_rows: False
+    plot_progressive_rows: False
+    plot_diffusion_rows: False
+    plot_quantize_denoised: True
+
+data:
+  target: main.DataModuleFromConfig
+  params:
+    batch_size: 32
+    train:
+      target: taming.data.annotated_objects_coco.AnnotatedObjectsCoco
+      params:
+        data_path: ../datasets/coco/2014  # substitute with path to full dataset
+        caption_ann_path: ../datasets/coco/2014/annotations/captions_train2014.json
+        use_stuff: False
+        split: train
+        keys: [image, caption, file_name, annotations]
+        no_tokens: 1024
+        target_image_size: 256
+        min_object_area: 0.00001
+        min_objects_per_image: 2
+        max_objects_per_image: 30
+        crop_method: random-1d
+        random_flip: true
+        use_group_parameter: true
+        encode_crop: False
+    validation:
+      target: taming.data.annotated_objects_coco.AnnotatedObjectsCoco
+      params:
+        data_path: ../datasets/coco/2014  # substitute with path to full dataset
+        caption_ann_path: ../datasets/coco/2014/annotations/captions_val2014.json
+        use_stuff: False
+        split: validation
+        keys: [image, caption, file_name, annotations]
+        no_tokens: 1024
+        target_image_size: 256
+        min_object_area: 0.00001
+        min_objects_per_image: 2
+        max_objects_per_image: 30
+        crop_method: center
+        random_flip: false
+        use_group_parameter: true
+        encode_crop: False
+    test:
+      target: taming.data.annotated_objects_coco.AnnotatedObjectsCoco
+      params:
+        data_path: ../datasets/coco/2014  # substitute with path to full dataset
+        caption_ann_path: ../datasets/coco/2014/annotations/captions_val2014.json
+        use_stuff: False
+        split: validation
+        keys: [image, objects, caption, file_name, annotations]
+        no_tokens: 1024
+        target_image_size: 256
+        min_object_area: 0.00001
+        min_objects_per_image: 0
+        max_objects_per_image: 90
+        crop_method: center
+        random_flip: false
+        use_group_parameter: true
+        encode_crop: false
+
+
+lightning:
+  trainer:
+    benchmark: True
+    max_epochs: 1000

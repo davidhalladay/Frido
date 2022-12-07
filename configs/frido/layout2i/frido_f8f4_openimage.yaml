@@ -94,38 +94,59 @@ model:
 data:
   target: scripts.sample_diffusion.DataModuleFromConfig
   params:
-    batch_size: 12
+    batch_size: 2
+    train:
+      target: taming.data.annotated_objects_open_images.AnnotatedObjectsOpenImages
+      params:
+        use_additional_parameters: false
+        data_path: ../datasets/openimage/train  # substitute with path to full dataset
+        split: train
+        keys: [image, objects_bbox, file_name]
+        no_tokens: 8192
+        target_image_size: 256
+        min_object_area: 0.00001
+        min_objects_per_image: 2
+        max_objects_per_image: 30
+        crop_method: random-1d
+        random_flip: True
+        use_group_parameter: true
+        encode_crop: True
     validation:
-      target: taming.data.annotated_objects_coco.AnnotatedObjectsCoco
+      target: taming.data.annotated_objects_open_images.AnnotatedObjectsOpenImages
       params:
-        data_path: ../datasets/coco/2017  # substitute with path to full dataset
-        OI_cate_path: frido/data/classes.csv
-        img_id_file: frido/data/image_ids_layout2i_2048.txt  # This is used for fixing sample files.
+        use_additional_parameters: false
+        data_path: ../datasets/openimage/validation  # substitute with path to full dataset
+        img_id_file: frido/data/image_ids_layout2i_oi_2048.txt
         split: validation
-        keys: [image, objects_bbox, file_name, annotations]
-        no_tokens: 1024
+        keys: [image, objects_bbox, file_name]
+        no_tokens: 8192
         target_image_size: 256
-        min_object_area: 0.02
-        min_objects_per_image: 3
-        max_objects_per_image: 8
+        min_object_area: 0.00001
+        min_objects_per_image: 2
+        max_objects_per_image: 30
         crop_method: center
-        random_flip: false
+        random_flip: False
         use_group_parameter: true
-        encode_crop: true
+        encode_crop: True
     test:
-      target: taming.data.annotated_objects_coco.AnnotatedObjectsCoco
+      target: taming.data.annotated_objects_open_images.AnnotatedObjectsOpenImages
       params:
-        data_path: ../datasets/coco/2017  # substitute with path to full dataset
-        OI_cate_path: frido/data/classes.csv
-        img_id_file: frido/data/image_ids_layout2i_2048.txt  # This is used for fixing sample files.
+        use_additional_parameters: false
+        data_path: ../datasets/openimage/validation  # substitute with path to full dataset
+        img_id_file: frido/data/image_ids_layout2i_oi_2048.txt
         split: validation
-        keys: [image, objects_bbox, file_name, annotations]
-        no_tokens: 1024
+        keys: [image, objects_bbox, file_name]
+        no_tokens: 8192
         target_image_size: 256
-        min_object_area: 0.02
-        min_objects_per_image: 3
-        max_objects_per_image: 8
+        min_object_area: 0.00001
+        min_objects_per_image: 2
+        max_objects_per_image: 30
         crop_method: center
-        random_flip: false
+        random_flip: False
         use_group_parameter: true
-        encode_crop: true
+        encode_crop: True
+
+lightning:
+  trainer:
+    benchmark: True
+    max_epochs: 200

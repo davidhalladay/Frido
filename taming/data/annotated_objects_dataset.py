@@ -20,7 +20,7 @@ class AnnotatedObjectsDataset(Dataset):
                  min_object_area: float, min_objects_per_image: int, max_objects_per_image: int,
                  crop_method: CropMethodType, random_flip: bool, no_tokens: int, use_group_parameter: bool,
                  encode_crop: bool, category_allow_list_target: str = "", category_mapping_target: str = "",
-                 no_object_classes: Optional[int] = None):
+                 no_object_classes: Optional[int] = None, shifting_cls_num: Optional[int] = 0):
 
         self.data_path = data_path
         self.split = split
@@ -34,6 +34,7 @@ class AnnotatedObjectsDataset(Dataset):
         self.no_tokens = no_tokens
         self.use_group_parameter = use_group_parameter
         self.encode_crop = encode_crop
+        self.shifting_cls_num = shifting_cls_num
 
         self.annotations = None
         self.image_descriptions = None
@@ -70,6 +71,10 @@ class AnnotatedObjectsDataset(Dataset):
         transform_functions = []
         if crop_method == 'none':
             transform_functions.append(transforms.Resize((target_image_size, target_image_size)))
+            # transform_functions.extend([
+            #     transforms.Resize((target_image_size, target_image_size)),
+            #     CenterCropReturnCoordinates(target_image_size)
+            # ])
         elif crop_method == 'center':
             transform_functions.extend([
                 transforms.Resize(target_image_size),
@@ -129,7 +134,8 @@ class AnnotatedObjectsDataset(Dataset):
                     self.no_tokens,
                     self.encode_crop,
                     self.use_group_parameter,
-                    getattr(self, 'use_additional_parameters', False)
+                    getattr(self, 'use_additional_parameters', False),
+                    self.shifting_cls_num
                 ),
                 'objects': ObjectsConditionalBuilder(
                     self.no_classes,
@@ -139,6 +145,14 @@ class AnnotatedObjectsDataset(Dataset):
                     self.use_group_parameter,
                     getattr(self, 'use_additional_parameters', False)
                 ),
+                # 'captions': CaptionsConditionalBuilder(
+                #     self.no_classes,
+                #     self.max_objects_per_image,
+                #     self.no_tokens,
+                #     self.encode_crop,
+                #     self.use_group_parameter,
+                #     getattr(self, 'use_additional_parameters', False)
+                # ),
             }
         return self._conditional_builders
 
@@ -211,6 +225,7 @@ class AnnotatedObjectsDataset(Dataset):
                 sample[conditional] = builder.build(sample['annotations'], sample['crop_bbox'], sample['flipped'])
 
         if self.keys:
+            # only return specified keys
             sample = {key: sample[key] for key in self.keys}
         return sample
 

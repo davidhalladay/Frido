@@ -15,12 +15,13 @@ import pytorch_lightning as pl
 
 from frido.util import log_txt_as_img, exists, default, ismap, isimage, mean_flat, count_params
 from frido.models.diffusion.ddim import DDIMSampler
+from frido.models.diffusion.plms import PLMSSampler
 from frido.util import instantiate_from_config_main as instantiate_from_config
 
 from taming.data.utils import custom_collate
 
-torch.manual_seed(0)
-np.random.seed(0)
+torch.manual_seed(23)
+np.random.seed(23)
 
 rescale = lambda x: (x + 1.) / 2.
 
@@ -155,12 +156,15 @@ def convsample(model, shape, return_intermediates=True,
 @torch.no_grad()
 def convsample_ddim(model, steps, shape, eta=1.0, cond=None, 
                     unconditional_guidance_scale=1.0, 
-                    unconditional_conditioning=None
+                    unconditional_conditioning=None, plms=False
                     ):
-    ddim = DDIMSampler(model)
+    if plms:
+        sampler = PLMSSampler(model)
+    else:
+        sampler = DDIMSampler(model)
     bs = shape[0]
     shape = shape[1:]
-    samples, intermediates = ddim.sample(steps, conditioning=cond, batch_size=bs, 
+    samples, intermediates = sampler.sample(steps, conditioning=cond, batch_size=bs, 
                 shape=shape, num_stage=model.model.diffusion_model.num_stage, eta=eta, verbose=False,
                 unconditional_guidance_scale=unconditional_guidance_scale,
                 unconditional_conditioning=unconditional_conditioning,log_every_t=20)
@@ -171,7 +175,7 @@ def convsample_ddim(model, steps, shape, eta=1.0, cond=None,
 def make_convolutional_sample(model, batch_size, cond=None, vanilla=False, 
                                 custom_steps=None, eta=1.0,
                                 unconditional_guidance_scale=1.0, 
-                                unconditional_conditioning=None):
+                                unconditional_conditioning=None, plms=False):
 
     log = dict()
 
@@ -189,7 +193,7 @@ def make_convolutional_sample(model, batch_size, cond=None, vanilla=False,
             sample, intermediates = convsample_ddim(model,  steps=custom_steps, shape=shape,
                                                     eta=eta, cond=cond,
                                                     unconditional_guidance_scale=unconditional_guidance_scale,
-                                                    unconditional_conditioning=unconditional_conditioning,)
+                                                    unconditional_conditioning=unconditional_conditioning,plms=plms)
 
         t1 = time.time()
 
@@ -202,7 +206,7 @@ def make_convolutional_sample(model, batch_size, cond=None, vanilla=False,
     return log, intermediates
 
 def run(model, data, logdir, batch_size=50, vanilla=False, custom_steps=None, eta=None, n_samples=50000, nplog=None,
-                                unconditional_guidance_scale=1.0, use_guidance=False):
+                                unconditional_guidance_scale=1.0, use_guidance=False, plms=False):
     if vanilla:
         print(f'Using Vanilla DDPM sampling with {model.num_timesteps} sampling steps.')
     else:
@@ -253,7 +257,7 @@ def run(model, data, logdir, batch_size=50, vanilla=False, custom_steps=None, et
         logs, intermediates = make_convolutional_sample(model, batch_size=len(z), cond=c,
                                             vanilla=vanilla, custom_steps=custom_steps,
                                             eta=eta, unconditional_guidance_scale=unconditional_guidance_scale, 
-                                            unconditional_conditioning=unconditional_conditioning)
+                                            unconditional_conditioning=unconditional_conditioning, plms=plms)
 
         try:
             logs["file_name"] = model.get_img_ids(batch)
@@ -367,6 +371,12 @@ def get_parser():
         nargs="?",
         help="number of samples to draw",
         default=-1
+    )
+    parser.add_argument(
+        "-plms",
+        "--plms",
+        action='store_true',
+        help="use plms sampling",
     )
     parser.add_argument(
         "-e",
@@ -542,6 +552,7 @@ if __name__ == "__main__":
 
     run(model, data, imglogdir, eta=opt.eta,
         vanilla=opt.vanilla_sample, custom_steps=opt.custom_steps,
-        batch_size=opt.batch_size, nplog=numpylogdir, use_guidance=opt.use_guidance, unconditional_guidance_scale=opt.guidance_scale)
+        batch_size=opt.batch_size, nplog=numpylogdir, use_guidance=opt.use_guidance, 
+        unconditional_guidance_scale=opt.guidance_scale, plms=opt.plms)
 
     print("done.")

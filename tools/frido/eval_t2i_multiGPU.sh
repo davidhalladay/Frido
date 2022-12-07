@@ -8,5 +8,5 @@ NUMGPU=$(expr $1 - 1)
 
 for i in $(seq 0 $NUMGPU); do \
     echo Running on GPU $i 
-    CUDA_VISIBLE_DEVICES=$i python3 scripts/sample_diffusion.py -cfg configs/layout2i/frido_f8f4.yaml -r exp/layout2i/frido_f8f4 -c 200 -ngpu $1 -igpu $i -name full & \
+    CUDA_VISIBLE_DEVICES=$i python3 scripts/sample_diffusion.py -cfg configs/frido/t2i/frido_f16f8_coco.yaml -r exp/t2i/frido_f16f8_coco -G -gs 1.5 -c 200 -ngpu $1 -igpu $i -name full & \
 done; wait

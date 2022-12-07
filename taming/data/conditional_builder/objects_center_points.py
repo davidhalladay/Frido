@@ -16,10 +16,11 @@ from torch import LongTensor, Tensor
 
 class ObjectsCenterPointsConditionalBuilder:
     def __init__(self, no_object_classes: int, no_max_objects: int, no_tokens: int, encode_crop: bool,
-                 use_group_parameter: bool, use_additional_parameters: bool):
+                 use_group_parameter: bool, use_additional_parameters: bool, shifting_cls_num: Optional[int] = 0):
         self.no_object_classes = no_object_classes
         self.no_max_objects = no_max_objects
         self.no_tokens = no_tokens
+        self.shifting_cls_num = shifting_cls_num
         self.encode_crop = encode_crop
         self.no_sections = int(math.sqrt(self.no_tokens))
         self.use_group_parameter = use_group_parameter
@@ -56,8 +57,8 @@ class ObjectsCenterPointsConditionalBuilder:
         return y_discrete * self.no_sections + x_discrete
 
     def coordinates_from_token(self, token: int) -> (float, float):
-        x = token % self.no_sections
-        y = token // self.no_sections
+        x = (token-self.shifting_cls_num) % self.no_sections
+        y = (token-self.shifting_cls_num) // self.no_sections
         return x / (self.no_sections - 1), y / (self.no_sections - 1)
 
     def bbox_from_token_pair(self, token1: int, token2: int) -> BoundingBox:
@@ -66,8 +67,8 @@ class ObjectsCenterPointsConditionalBuilder:
         return x0, y0, x1 - x0, y1 - y0
 
     def token_pair_from_bbox(self, bbox: BoundingBox) -> Tuple[int, int]:
-        return self.tokenize_coordinates(bbox[0], bbox[1]), \
-               self.tokenize_coordinates(bbox[0] + bbox[2], bbox[1] + bbox[3])
+        return self.tokenize_coordinates(bbox[0], bbox[1]) + self.shifting_cls_num, \
+               self.tokenize_coordinates(bbox[0] + bbox[2], bbox[1] + bbox[3]) + self.shifting_cls_num
 
     def inverse_build(self, conditional: LongTensor) \
             -> Tuple[List[Tuple[int, Tuple[float, float]]], Optional[BoundingBox]]:
@@ -166,5 +167,5 @@ class ObjectsCenterPointsConditionalBuilder:
         # flatten
         flattened = [token for tuple_ in object_tuples for token in tuple_] + extra
         assert len(flattened) == self.embedding_dim
-        assert all(0 <= value < self.no_tokens for value in flattened)
+        assert all(0 <= value < self.no_tokens+self.shifting_cls_num for value in flattened)
         return LongTensor(flattened)

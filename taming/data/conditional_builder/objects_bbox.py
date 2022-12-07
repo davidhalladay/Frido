@@ -43,6 +43,10 @@ class ObjectsBoundingBoxConditionalBuilder(ObjectsCenterPointsConditionalBuilder
              line_width: int = 3, font_size: Optional[int] = None) -> Tensor:
         plot = pil_image.new('RGB', figure_size, WHITE)
         draw = pil_img_draw.Draw(plot)
+        # font = ImageFont.truetype(
+        #     "arial.ttf",
+        #     size=get_plot_font_size(font_size, figure_size)
+        # )
         width, height = plot.size
         description, crop_coordinates = self.inverse_build(conditional)
         for (representation, bbox), color in zip(description, cycle(COLOR_PALETTE)):
@@ -74,6 +78,9 @@ class ObjectsConditionalBuilder(ObjectsCenterPointsConditionalBuilder):
     def inverse_build(self, conditional: LongTensor) -> Tuple[List[Tuple[int, BoundingBox]], Optional[BoundingBox]]:
         conditional_list = conditional.tolist()
         crop_coordinates = None
+        # if self.encode_crop:
+        #     crop_coordinates = self.bbox_from_token_pair(conditional_list[-2], conditional_list[-1])
+        #     conditional_list = conditional_list[:-2]
         object_triples = grouper(conditional_list, 1)
         assert conditional.shape[0] == self.embedding_dim
         return [
@@ -85,6 +92,23 @@ class ObjectsConditionalBuilder(ObjectsCenterPointsConditionalBuilder):
              line_width: int = 3, font_size: Optional[int] = None) -> Tensor:
 
         return 0
+        # plot = pil_image.new('RGB', figure_size, WHITE)
+        # draw = pil_img_draw.Draw(plot)
+        # font = ImageFont.truetype(
+        #     "/usr/share/fonts/truetype/lato/Lato-Regular.ttf",
+        #     size=get_plot_font_size(font_size, figure_size)
+        # )
+        # width, height = plot.size
+        # description, crop_coordinates = self.inverse_build(conditional)
+        # for (representation, bbox), color in zip(description, cycle(COLOR_PALETTE)):
+        #     annotation = self.representation_to_annotation(representation)
+        #     class_label = label_for_category_no(annotation.category_no) + ' ' + additional_parameters_string(annotation)
+        #     bbox = absolute_bbox(bbox, width, height)
+        #     draw.rectangle(bbox, outline=color, width=line_width)
+        #     draw.text((bbox[0] + line_width, bbox[1] + line_width), class_label, anchor='la', fill=BLACK, font=font)
+        # if crop_coordinates is not None:
+        #     draw.rectangle(absolute_bbox(crop_coordinates, width, height), outline=GRAY_75, width=line_width)
+        # return convert_pil_to_tensor(plot) / 127.5 - 1.
 
 class CaptionsConditionalBuilder(ObjectsCenterPointsConditionalBuilder):
     @property
@@ -103,6 +127,9 @@ class CaptionsConditionalBuilder(ObjectsCenterPointsConditionalBuilder):
     def inverse_build(self, conditional: LongTensor) -> Tuple[List[Tuple[int, BoundingBox]], Optional[BoundingBox]]:
         conditional_list = conditional.tolist()
         crop_coordinates = None
+        # if self.encode_crop:
+        #     crop_coordinates = self.bbox_from_token_pair(conditional_list[-2], conditional_list[-1])
+        #     conditional_list = conditional_list[:-2]
         object_triples = grouper(conditional_list, 1)
         assert conditional.shape[0] == self.embedding_dim
         return [
@@ -114,3 +141,20 @@ class CaptionsConditionalBuilder(ObjectsCenterPointsConditionalBuilder):
              line_width: int = 3, font_size: Optional[int] = None) -> Tensor:
 
         return 0
+        # plot = pil_image.new('RGB', figure_size, WHITE)
+        # draw = pil_img_draw.Draw(plot)
+        # font = ImageFont.truetype(
+        #     "/usr/share/fonts/truetype/lato/Lato-Regular.ttf",
+        #     size=get_plot_font_size(font_size, figure_size)
+        # )
+        # width, height = plot.size
+        # description, crop_coordinates = self.inverse_build(conditional)
+        # for (representation, bbox), color in zip(description, cycle(COLOR_PALETTE)):
+        #     annotation = self.representation_to_annotation(representation)
+        #     class_label = label_for_category_no(annotation.category_no) + ' ' + additional_parameters_string(annotation)
+        #     bbox = absolute_bbox(bbox, width, height)
+        #     draw.rectangle(bbox, outline=color, width=line_width)
+        #     draw.text((bbox[0] + line_width, bbox[1] + line_width), class_label, anchor='la', fill=BLACK, font=font)
+        # if crop_coordinates is not None:
+        #     draw.rectangle(absolute_bbox(crop_coordinates, width, height), outline=GRAY_75, width=line_width)
+        # return convert_pil_to_tensor(plot) / 127.5 - 1.

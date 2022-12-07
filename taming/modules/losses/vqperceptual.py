@@ -37,7 +37,7 @@ class VQLPIPSWithDiscriminator(nn.Module):
     def __init__(self, disc_start, codebook_weight=1.0, pixelloss_weight=1.0,
                  disc_num_layers=3, disc_in_channels=3, disc_factor=1.0, disc_weight=1.0,
                  perceptual_weight=1.0, use_actnorm=False, disc_conditional=False,
-                 disc_ndf=64, disc_loss="hinge", aux_downscale=4.):
+                 disc_ndf=64, disc_loss="hinge", aux_downscale=4., aux_loss_weight=[1., 0]):
         super().__init__()
         assert disc_loss in ["hinge", "vanilla"]
         self.codebook_weight = codebook_weight
@@ -45,6 +45,7 @@ class VQLPIPSWithDiscriminator(nn.Module):
         self.perceptual_loss = LPIPS().eval()
         self.perceptual_weight = perceptual_weight
         self.aux_downscale = aux_downscale
+        self.aux_loss_weight = aux_loss_weight
 
         self.discriminator = NLayerDiscriminator(input_nc=disc_in_channels,
                                                  n_layers=disc_num_layers,
@@ -88,13 +89,12 @@ class VQLPIPSWithDiscriminator(nn.Module):
         else:
             p_loss = torch.tensor([0.0])
 
+        rec_aux_loss = torch.tensor([0.0])
         if xrec_aux is not None:
-            inputs_aux = F.interpolate(inputs, scale_factor=1./aux_downscale)
-            inputs_aux = F.interpolate(inputs_aux, scale_factor=aux_downscale, mode='bilinear')
-            rec_aux_loss = torch.abs(inputs_aux.contiguous() - xrec_aux.contiguous())
+            # TODO: remove this
+            for ii in range(len(xrec_aux)):
+                rec_aux_loss += torch.abs(inputs.contiguous() - xrec_aux[ii].contiguous()) * self.aux_loss_weight[ii]
             rec_loss = rec_loss + 0.5 * rec_aux_loss
-        else:
-            rec_aux_loss = torch.tensor([0.0])
 
         nll_loss = rec_loss
         nll_loss = torch.mean(nll_loss)

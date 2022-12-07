@@ -93,6 +93,23 @@ data:
   target: scripts.sample_diffusion.DataModuleFromConfig
   params:
     batch_size: 32
+    train:
+      target: taming.data.annotated_objects_coco.AnnotatedObjectsCoco
+      params:
+        data_path: ../datasets/coco/2014  # substitute with path to full dataset
+        caption_ann_path: ../datasets/coco/2014/annotations/captions_train2014.json
+        use_stuff: False
+        split: train
+        keys: [image, caption, file_name, annotations]
+        no_tokens: 1024
+        target_image_size: 256
+        min_object_area: 0.00001
+        min_objects_per_image: 2
+        max_objects_per_image: 30
+        crop_method: random-1d
+        random_flip: true
+        use_group_parameter: true
+        encode_crop: False
     validation:
       target: taming.data.annotated_objects_coco.AnnotatedObjectsCoco
       params:
@@ -127,3 +144,8 @@ data:
         random_flip: false
         use_group_parameter: true
         encode_crop: false
+
+lightning:
+  trainer:
+    benchmark: True
+    max_epochs: 1000

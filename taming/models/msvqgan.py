@@ -163,6 +163,28 @@ class MSFPNVQModel(pl.LightningModule):
         dec = self.decode(quant_b)
         return dec
 
+    def forward(self, input, return_info=False):
+        quant, diff, info = self.encode(input)
+        quant_aux = quant.clone()
+
+        # TODO: remove dummy
+        quant_aux[:, :-1*self.embed_dim[-1], :, :] = 0
+        quant_aux2 = quant.clone()
+        quant_aux2[:, self.embed_dim[-1]:, :, :] = 0
+        
+        dec = self.decode(quant)
+        dec_aux = self.decode(quant_aux)
+        dec_aux2 = self.decode(quant_aux2)
+        
+        dec_aux = [dec_aux, dec_aux2]
+        
+        if self.use_aux_loss:
+            return dec, dec_aux, diff, info
+        
+        if return_info:
+            return dec, diff, info
+        return dec, diff, info
+
     def get_input(self, batch, k):
         x = batch[k]
         if len(x.shape) == 3:
@@ -175,16 +197,116 @@ class MSFPNVQModel(pl.LightningModule):
         return x
 
     def training_step(self, batch, batch_idx, optimizer_idx):
-        pass
+        x = self.get_input(batch, self.image_key)
+        xrec_aux = None
+        if self.use_aux_loss:
+            xrec, xrec_aux, qloss, _ = self(x)
+        else:
+            xrec, qloss, _ = self(x)
+
+        if optimizer_idx == 0:
+            # autoencode
+            aeloss, log_dict_ae = self.loss(qloss, x, xrec, optimizer_idx, self.global_step,
+                                            last_layer=self.get_last_layer(), split="train", xrec_aux=xrec_aux)
+            self.log("train/aeloss", aeloss, prog_bar=True, logger=True, on_step=True, on_epoch=True)
+            self.log_dict(log_dict_ae, prog_bar=False, logger=True, on_step=True, on_epoch=True)
+            return aeloss
+
+        if optimizer_idx == 1:
+            # discriminator
+            discloss, log_dict_disc = self.loss(qloss, x, xrec, optimizer_idx, self.global_step,
+                                            last_layer=self.get_last_layer(), split="train")
+            self.log("train/discloss", discloss, prog_bar=True, logger=True, on_step=True, on_epoch=True)
+            self.log_dict(log_dict_disc, prog_bar=False, logger=True, on_step=True, on_epoch=True)
+            return discloss
 
     def validation_step(self, batch, batch_idx):
-        pass
+        x = self.get_input(batch, self.image_key)
+        xrec_aux = None
+        if self.use_aux_loss:
+            xrec, xrec_aux, qloss, _ = self(x)
+        else:
+            xrec, qloss, _ = self(x)
+        aeloss, log_dict_ae = self.loss(qloss, x, xrec, 0, self.global_step,
+                                            last_layer=self.get_last_layer(), split="val", xrec_aux=xrec_aux)
+
+        discloss, log_dict_disc = self.loss(qloss, x, xrec, 1, self.global_step,
+                                            last_layer=self.get_last_layer(), split="val")
+        rec_loss = log_dict_ae["val/rec_loss"]
+        self.log("val/rec_loss", rec_loss,
+                   prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True)
+        self.log("val/aeloss", aeloss,
+                   prog_bar=True, logger=True, on_step=True, on_epoch=True, sync_dist=True)
+        self.log_dict(log_dict_ae)
+        self.log_dict(log_dict_disc)
+        return self.log_dict
 
     def test_step(self, batch, batch_idx):
         pass
 
+    def configure_optimizers(self):
+        lr = self.learning_rate
+        opt_ae = torch.optim.Adam(list(self.encoder.parameters())+
+                                  list(self.decoder.parameters())+
+                                  list(self.ms_quantize.parameters())+
+                                  list(self.ms_quant_conv.parameters())+
+                                  list(self.post_quant_conv.parameters())+
+                                  list(self.upsample.parameters())+
+                                  list(self.shared_decoder.parameters())+
+                                  list(self.shared_post_quant_conv.parameters()),
+                                  lr=lr, betas=(0.5, 0.9))
+
+        opt_disc = torch.optim.Adam(self.loss.discriminator.parameters(),
+                                    lr=lr, betas=(0.5, 0.9))
+        return [opt_ae, opt_disc], []
+
     def get_last_layer(self):
         return self.decoder.conv_out.weight
+
+    def log_images(self, batch, **kwargs):
+        log = dict()
+        x = self.get_input(batch, self.image_key)
+        try:
+            img_ids = self.get_img_ids(batch)
+            log["file_name"] = img_ids
+        except:
+            pass
+        
+        x = x.to(self.device)
+        
+        if self.use_aux_loss:
+            xrec, xrec_aux, _, info = self(x)
+            log["reconstructions_aux"] = xrec_aux
+        else:
+            xrec, _, info = self(x)
+
+        if x.shape[1] > 3:
+            # colorize with random projection
+            assert xrec.shape[1] > 3
+            x = self.to_rgb(x)
+            xrec = self.to_rgb(xrec)
+            
+        log["codebook_info"] = [info[2]]
+        log["inputs"] = x
+        log["reconstructions"] = xrec
+
+        if len(self.embed_dim) >= 2:
+            quant, _, _ = self.encode(x)
+
+            for i in range(len(self.embed_dim)):
+                start_channel = sum(self.embed_dim[:i])
+                end_channel = sum(self.embed_dim[:i+1])
+                    
+                print(f'reconstructions channel range [{start_channel}, {end_channel}] (mean/std): ', quant[:, start_channel:end_channel, :, :].mean(), quant[:, start_channel:end_channel, :, :].std())
+
+                noise = torch.zeros((quant.size(0), sum(self.embed_dim), quant.size(2), quant.size(3)), device=self.device)
+                samples_down = noise.clone()
+                samples_down[:, start_channel:end_channel, :, :] = quant[:, start_channel:end_channel, :, :]
+                
+                x_samples_down = self.decode(samples_down)
+                log[f"reconstructions_{start_channel}_{end_channel}"] = x_samples_down
+                
+        return log
 
     def to_rgb(self, x):
         assert self.image_key == "segmentation"
