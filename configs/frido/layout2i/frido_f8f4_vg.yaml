@@ -122,6 +122,7 @@ data:
         min_object_area: 0.00001
         min_objects_per_image: 2
         max_objects_per_image: 30
+        shifting_cls_num: 179 # specify this will allow turn off the embeddings sharing for cls tokens and bbx tokens
         crop_method: center
         random_flip: false
         use_group_parameter: true
@@ -137,6 +138,7 @@ data:
         min_object_area: 0.00001
         min_objects_per_image: 2
         max_objects_per_image: 30
+        shifting_cls_num: 179 # specify this will allow turn off the embeddings sharing for cls tokens and bbx tokens 
         crop_method: center
         random_flip: false
         use_group_parameter: true
