@@ -2,9 +2,9 @@ from setuptools import setup, find_packages
 
 setup(
     name='frido',
-    version='1.0.0',
+    version='1.1',
     author='wancyuan',
-    author_email='wancyuan@ntu.edu.tw',
+    author_email='wancyuanf@gmail.com',
     description='Feature Pyramid Diffusion for Complex Scene Image Synthesis',
     packages=find_packages(),
     install_requires=[
