@@ -49,9 +49,9 @@ We provide two approaches to set up the datasets:
 ### 🎶 Auto-download
 To automatically download datasets and save it into the default path (`../`), please use following script:
 ```bash
-bash tools/download_coco.sh
-bash tools/download_vg.sh
-bash tools/download_openimage.sh
+bash tools/datasets/download_coco.sh
+bash tools/datasets/download_vg.sh
+bash tools/datasets/download_openimage.sh
 ```
 ### 🎶 Manual setup
 
