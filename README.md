@@ -221,7 +221,7 @@ bash tools/download.sh
 ```
 You may also download them manually from the download links shown below.
 
-| Task                   | Datase                     | FID    | Link (TODO) | Comments
+| Task                   | Dataset                     | FID    | Link (TODO) | Comments
 | ---------------------- | -------------------------- | ------ | --- |-------------
 | Text-to-image          | COCO 2014                  | 11.24  | [Google drive](https://github.com/davidhalladay/Frido/blob/main/tools/download.sh) |
 | Text-to-image (mini)   | COCO 2014                  | 64.85  | [Google drive](https://github.com/davidhalladay/Frido/blob/main/tools/download.sh) |1000 images of mini-val; FID was calculated against corresponding GT images.
