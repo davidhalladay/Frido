@@ -370,11 +370,11 @@ We build Frido codebase heavily on the codebase of [Latent Diffusion Model (LDM)
 ## Citation
 If you find this code useful for your research, please consider citing:
 ```bibtex
-@article{fan2022frido,
+@inproceedings{fan2022frido,
   title={Frido: Feature Pyramid Diffusion for Complex Scene Image Synthesis},
   author={Fan, Wan-Cyuan and Chen, Yen-Chun and Chen, Dongdong and Cheng, Yu and Yuan, Lu and Wang, Yu-Chiang Frank},
-  journal={arXiv preprint arXiv:2208.13753},
-  year={2022}
+  booktitle={AAAI},
+  year={2023}
 }
 ```
 
