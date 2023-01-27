@@ -124,9 +124,11 @@ class MSFPNVQModel(pl.LightningModule):
         for ii in range(len(h_ms)):
 
             if len(prev_h) != 0:
+                prev_h_new = []
                 for j in range(ii):
                     prev_h[j] = self.upsample[ii-1](prev_h[j])
-                    prev_h[j] = self.shared_post_quant_conv[ii-1](prev_h[j])
+                    prev_h_j = self.shared_post_quant_conv[ii-1](prev_h[j]) #should not replace
+                    prev_h_new.append(prev_h_j)
                 
                 quant = torch.cat((*prev_h[:ii], h_ms[ii]), dim=1)
                 quant = self.shared_decoder[ii-1](quant)
