@@ -11,7 +11,7 @@ This is the official repository of [Frido](https://arxiv.org/abs/2208.13753). We
 
 ---
 ## ☀️Important updates 
-- [Nov 7, 2024] Microsoft’s blob storage no longer allow anonymous downloads per the latest company wise security policy. The pretrained-weights may not be available now. We are fixing this issues.
+- [Nov 7, 2024] Microsoft’s blob storage no longer allow anonymous downloads per the latest company wise security policy. The pretrained-weights may not be available now. We are fixing this issue.
 
 ---
 ## ☀️News
