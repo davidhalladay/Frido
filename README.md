@@ -10,16 +10,16 @@ This is the official repository of [Frido](https://arxiv.org/abs/2208.13753). We
 <br/>[Wan-Cyuan Fan](https://sites.google.com/view/wancyuanfan), [Yen-Chun Chen](https://github.com/ChenRocks), DongDong Chen, Yu Cheng, Lu Yuan, Yu-Chiang Frank Wang<br/>
 
 ---
+## ☀️Important updates 
+- [Nov 7, 2024] Microsoft’s blob storage no longer allow anonymous downloads per the latest company wise security policy. The pretrained-weights may not be available now. We are fixing this issues.
+
+---
 ## ☀️News
 
 We provide a web version of demo [here](https://sites.google.com/view/wancyuanfan/projects/frido) to help researchers to better understand our work. This web demo contains multiple animations to explain th diffusion and denoising processes of **Frido** and more qualitative experimental results. Hope it's useful!
 
 ---
 ## 🐧TODO
-
-### Frido x Diffuser
-- [ ] Merge with 🤗diffuser
-- [ ] Live demo on Huggingface!
 
 ### Frido codebase
 - [x] Training code
@@ -32,7 +32,6 @@ We provide a web version of demo [here](https://sites.google.com/view/wancyuanfa
 - [X] Auto download model weights
 - [X] PLMS sampling tools
 - [X] Web demo and framework animation
-- [ ] Fix backward issue in PytorchLightning
 
 ---
 ## Machine environment
