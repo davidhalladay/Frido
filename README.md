@@ -12,6 +12,7 @@ This is the official repository of [Frido](https://arxiv.org/abs/2208.13753). We
 ---
 ## ☀️Important updates 
 - [Nov 7, 2024] Microsoft’s blob storage no longer allow anonymous downloads per the latest company wise security policy. The pretrained-weights may not be available now. We are fixing this issue.
+- [Nov 12, 2024] All checkpoints are available for download in [Google Drive](https://drive.google.com/drive/folders/1Qu_wCYAxJSqGv9BxXGo1Wu1CsV061rz5?usp=drive_link).
 
 ---
 ## ☀️News
@@ -213,6 +214,10 @@ Please make sure that the file structure is the same as the following. Or, you m
 ---
 
 ## Download pre-trained models
+
+> Microsoft’s blob storage no longer allow anonymous downloads per the latest company wise security policy. The pretrained-weights may not be available by the following script.
+> Please kindly download the checkpoints from [Google Drive](https://drive.google.com/drive/folders/1Qu_wCYAxJSqGv9BxXGo1Wu1CsV061rz5?usp=drive_link).
+
 The following table describs tasks and models that are currently available. 
 To auto-download (using azcopy) all model checkpoints of Frido, please use following command: 
 ```bash
